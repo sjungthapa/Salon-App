@@ -1,11 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import authRoutes from './routes/auth.routes.js';
-import appointmentRoutes from './routes/appointment.routes.js';
-import serviceRoutes from './routes/service.routes.js';
-import userRoutes from './routes/user.routes.js';
-import { errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
 
@@ -18,20 +13,39 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Simple in-memory storage (will be replaced with database later)
+export const db = {
+  users: [],
+  appointments: [],
+  services: []
+};
 
 // Routes
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/services', serviceRoutes);
-app.use('/api/users', userRoutes);
+app.get('/api', (req, res) => {
+  res.json({ 
+    message: 'Appointment Booking API',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth/*',
+      appointments: '/api/appointments/*',
+      services: '/api/services/*'
+    }
+  });
+});
 
 // Error handling
-app.use(errorHandler);
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  const statusCode = err.statusCode || 500;
+  res.status(statusCode).json({
+    error: err.message || 'Internal Server Error'
+  });
+});
 
 // 404 handler
 app.use((req, res) => {
@@ -39,8 +53,8 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(` Server is running on port ${PORT}`);
-  console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 export default app;
