@@ -1,11 +1,17 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import connectDB from './config/database.js';
+import serviceRoutes from './routes/service.routes.js';
+import appointmentRoutes from './routes/appointment.routes.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Connect to MongoDB
+connectDB();
 
 // Middleware
 app.use(cors({
@@ -13,13 +19,6 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-
-// Simple in-memory storage (will be replaced with database later)
-export const db = {
-  users: [],
-  appointments: [],
-  services: []
-};
 
 // Routes
 app.get('/api/health', (req, res) => {
@@ -31,12 +30,15 @@ app.get('/api', (req, res) => {
     message: 'Appointment Booking API',
     endpoints: {
       health: '/api/health',
-      auth: '/api/auth/*',
-      appointments: '/api/appointments/*',
-      services: '/api/services/*'
+      services: '/api/services',
+      appointments: '/api/appointments'
     }
   });
 });
+
+// API Routes
+app.use('/api/services', serviceRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {
